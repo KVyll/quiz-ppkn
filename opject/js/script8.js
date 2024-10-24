@@ -101,11 +101,9 @@ const soalList = [
     }
 ];
 
-// ... (kode JavaScript lainnya tetap sama)
-    // Tambahkan soal lainnya di sini
-
 let currentSoal = 0;
 let poin = parseInt(localStorage.getItem('poin')) || 0;
+let soalTerjawab = false;
 
 function tampilkanSoal() {
     const soal = soalList[currentSoal];
@@ -119,20 +117,22 @@ function tampilkanSoal() {
                     ${pilihan}
                 </label>
             `).join('')}
-            <button class="button-soal" type="submit">Jawab</button>
+            <button id="jawab-button" class="button-soal" type="submit">Jawab</button>
         </form>
         <p id="hasil"></p>
     `;
 
     document.getElementById('formulir-kuis').addEventListener('submit', cekJawaban);
+    soalTerjawab = false;
 }
-
-// ... existing code ...
 
 function cekJawaban(e) {
     e.preventDefault();
+    if (soalTerjawab) return;
+
     const jawabanTerpilih = document.querySelector('input[name="jawaban"]:checked');
     const hasilElemen = document.getElementById('hasil');
+    const jawabButton = document.getElementById('jawab-button');
     
     if (!jawabanTerpilih) {
         hasilElemen.textContent = 'Silakan pilih jawaban terlebih dahulu.';
@@ -144,16 +144,20 @@ function cekJawaban(e) {
     
     if (jawaban === soal.jawabanBenar) {
         hasilElemen.textContent = 'Benar! Anda mendapatkan 1000 poin.';
-        poin += 1000; // Mengubah penambahan poin menjadi 1000
+        poin += 1000;
         updatePoin();
     } else {
         hasilElemen.textContent = 'Maaf, jawaban Anda kurang tepat.';
     }
 
     document.getElementById('next-button').style.display = 'block';
-}
+    jawabButton.disabled = true;
+    soalTerjawab = true;
 
-// ... rest of the code ...
+    // Menonaktifkan semua input radio
+    const radioInputs = document.querySelectorAll('input[type="radio"]');
+    radioInputs.forEach(input => input.disabled = true);
+}
 
 function nextSoal() {
     currentSoal++;
@@ -171,8 +175,24 @@ function updatePoin() {
     localStorage.setItem('poin', poin);
 }
 
+function resetPoin() {
+    poin = 0;
+    localStorage.setItem('poin', poin);
+    updatePoin();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     tampilkanSoal();
     updatePoin();
     document.getElementById('next-button').addEventListener('click', nextSoal);
+    
+    // Tambahkan event listener untuk tombol kembali ke menu pilih kelas
+    const backButton = document.getElementById('back-to-menu');
+    if (backButton) {
+        backButton.addEventListener('click', function() {
+            resetPoin();
+            // Arahkan kembali ke halaman menu pilih kelas
+            window.location.href = 'index.html';
+        });
+    }
 });
